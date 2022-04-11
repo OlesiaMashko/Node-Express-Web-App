@@ -1,9 +1,13 @@
+//Connect to required modules
 const express = require('express')
 const cors = require('cors')
 const mongoose = require('mongoose');
 const path = require('path');
 const urlencodedParse = express.urlencoded({ extended: false })
+const { query } = require('express-validator');
+const { check, validationResult } = require('express-validator');
 
+//Get database and model referencw
 var database = require('./config/database');
 var Restaurants = require('./models/restaurants');
 var app = express();
@@ -15,6 +19,7 @@ const exphbs = require('express-handlebars');
 const { resolve } = require('path');
 const HBS = exphbs.create({
     helpers: {},
+    partialsDir: 'views/partials',
     layoutsDir: path.join(__dirname, "views/layouts"),
     extname: "hbs",
     defaultLayout: "main"
@@ -48,7 +53,7 @@ var restaurant = new Restaurants({
 
 //"Initializing" the Module
 function initialize(connectedStr) {
-    mongoose.connect(database.url, function(err) {
+    mongoose.connect(database.url, function (err) {
         if (err == null) console.info(connectedStr);
         else {
             console.error(err.message);
@@ -79,9 +84,9 @@ function getRestaurantById(id) {
 }
 
 // Overwrite an existing restaurant
-function updateRestaurantById(data, Id) {
+function updateRestaurantById(Id, borough, street) {
     return Restaurants
-        .findByIdAndUpdate({ _id: Id }, data)
+        .findByIdAndUpdate(Id, { address: { street: street }, borough: borough })
 }
 
 //Delete an existing restaurant 
@@ -94,7 +99,7 @@ function deleteRestaurantById(Id) {
 initialize("Connected successfully");
 
 //This route uses the body of the request to add a new "Restaurant"
-app.post("/api/restaurants", function(req, res) {
+app.post("/api/restaurants", function (req, res) {
     if (!req.body) return res.status(400).render('./partials/error.hbs', { message: "400, Bad Request" })
     let address = {
         building: req.body.building,
@@ -121,75 +126,141 @@ app.post("/api/restaurants", function(req, res) {
         restaurant_id: restaurant_id
     });
 
-    //adding new rest. and checks the status 
     addNewRestaurant(restaurant)
         .then((restaurant) => {
             res
                 .status(201)
                 .send("Success");
         })
-        .catch(err => res.status(500).render('./partials/error.hbs', { message: "500, " + err.message }));
+        .catch(err => res.status(500).render('./partials/error.hbs', { title: "Status 500", message: err.message }))
 })
 
 //This route must accept the numeric query parameters "page" and "perPage" as well as the string parameter "borough"
-app.get("/api/restaurants", function(req, res) {
-    if (req.query.page == undefined || req.query.perPage == undefined) {
-        return res.status(400).render('./partials/error.hbs', { message: "400, Bad Request" })
-    }
+//Validation is done using express-validation
+app.get("/api/restaurants", [
+    check("page").notEmpty().withMessage("Page field should not be empty").isNumeric().withMessage("Page field must be a number"),
+    check("perPage").notEmpty().withMessage("Per Page field should not be empty").isNumeric().withMessage("Per Page field must be a number"),
+    check("borough").not().isNumeric().withMessage("Borough field must be a string"),
+], function (req, res) {
     let page = req.query.page;
     let perPage = req.query.perPage;
     let borough = {}
     if (req.query.borough != undefined) {
         borough = { borough: req.query.borough }
     }
+    const errors = validationResult(req);
+    var msg = errors.array();
+
+    var errMessage = "";
+    for (var i = 0; i < msg.length; i++) {
+        errMessage += msg[i].msg + "***"
+    }
+    //Display validation error
+    if (!errors.isEmpty()) {
+        return res.status(400).render('./partials/error.hbs', { title: "Status 400 ", message: errMessage })
+    }
     getAllRestaurants(page, perPage, borough)
         .then((restaurants) => {
-            let code = 200;
+            let code = 201;
             if (restaurants.length == 0) code = 204;
+            res
+                .status(code)
+                .json(restaurants)
+        })
+        .catch(err => res.status(500).render('./partials/error.hbs', { title: "Status 500", message: err.message }));
+
+})
+
+
+//gets the restaurant by ID passed in the route
+app.get("/api/restaurants/:_id", function (req, res) {
+    var id = req.params._id
+    getRestaurantById(id)
+        .then((restaurant) => {
+            res
+                .status(201)
+                .json(restaurant);
+            process.exit()
+        })
+        .catch((err) => {
+            console.error(err.message);
+            res.status(500).render('./partials/error.hbs', { title: "Status 500", message: err.message })
+        });
+})
+
+//update restaurant details by id passed in the route and other data in the
+//request body
+app.put("/api/restaurants/:_id", function (req, res) {
+    var borough = req.body.borough
+    var street = req.body.street
+
+    updateRestaurantById(req.params._id, borough, street)
+        .then((restaurant) => {
+            res.status(201)
+                .json(restaurant)
+            process.exit()
+        })
+        .catch((err) => {
+            console.error(err.message);
+            res.status(500).render('./partials/error.hbs', { title: "Status 500", message: err.message })
+        });
+})
+
+//deletes the restaurant by id
+app.delete("/api/restaurants/:_id", function (req, res) {
+    deleteRestaurantById(req.params)
+        .then((restaurant) => {
+            console.log(" restaurant deleted");
+            res.status(201).send("Restaurant deleted")
+        })
+        .catch((err) => { res.status(500).render('./partials/error.hbs', { title: "Status 500", message: err.message }) });
+})
+
+app.get("/api/ui/restaurants", function (req, res) {
+    res.render('./pages/form', { title: 'GET RESTAURANT' });
+})
+
+app.post("/api/ui/restaurants", [
+    check("page").notEmpty().withMessage("Page field should not be empty").isNumeric().withMessage("Page field must be a number"),
+    check("perPage").notEmpty().withMessage("Per Page field should not be empty").isNumeric().withMessage("Per Page field must be a number"),
+    check("borough").notEmpty().withMessage("Borough field should not be empty").not().isNumeric().withMessage("Borough field must be a string"),
+], function (req, res) {
+
+    const errors = validationResult(req);
+    var msg = errors.array();
+
+    var errMessage = "";
+    for (var i = 0; i < msg.length; i++) {
+        errMessage += msg[i].msg + "***"
+    }
+    if (!errors.isEmpty()) {
+        return res.status(400).render('./partials/error.hbs', { title: "Status 400 ", message: errMessage })
+    }
+
+    let page = req.body.page;
+    let perPage = req.body.perPage;
+    let borough = {}
+    borough = { borough: req.body.borough }
+
+    getAllRestaurants(page, perPage, borough)
+        .then((restaurants) => {
+            let code = 201;
+            if (restaurants.length == 0)
+                code = 204
             res
                 .status(code)
                 .render('./pages/restaurants.hbs', { restaurants: restaurants });
         })
-        .catch(err => res.status(500).render('./partials/error.hbs', { message: "500, " + err.message }));
+        .catch(err => res.status(500).render('./partials/error.hbs', { title: "Status 500", message: err.message }));
+
 })
 
 
-
-//////// DID JUST FOR TESTING
-
-//gets the restaurant by ID
-app.get("/getId", function(req, res) {
-    getRestaurantById("5eb3d668b31de5d588f4292c")
-        .then((restaurant) => {
-            console.log(restaurant);
-        })
-        .catch((err) => {
-            console.error(err.message);
-        });
-})
-
-//updets restaurant by id
-app.get("/updateById", function(req, res) {
-    updateRestaurantById({ borough: "Olesia" }, "5eb3d668b31de5d588f4292c")
-        .then((restaurant) => { console.log(restaurant); })
-        .catch((err) => { console.error(err.message); });
-})
-
-//deletes the restaurant by id
-app.get("/deleteById", function(req, res) {
-    deleteRestaurantById("5eb3d668b31de5d588f4292c")
-        .then((restaurant) => { console.log("deleted"); })
-        .catch((err) => { console.error(err); });
-})
-
-////////////
-
-
-app.use('/', function(req, res) {
+app.use('/', function (req, res) {
     res.render('./partials/index', { title: 'Express' });
 });
 
-app.get('*', function(req, res) {
+app.get('*', function (req, res) {
     res.render('./partials/error.hbs', { title: 'Error', message: 'Wrong Route' });
 });
 

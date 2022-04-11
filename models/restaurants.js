@@ -5,7 +5,7 @@ RestSchema = new Schema({
 
     address: {
         building: {
-            type: Date
+            type: String
         },
         coord: {
             type: [
@@ -28,9 +28,7 @@ RestSchema = new Schema({
     grades: {
         type: [{
             date: {
-                $date: {
                     type: Date
-                }
             },
             grade: {
                 type: String
