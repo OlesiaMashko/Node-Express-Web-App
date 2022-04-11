@@ -121,6 +121,7 @@ app.post("/api/restaurants", function(req, res) {
         restaurant_id: restaurant_id
     });
 
+    //adding new rest. and checks the status 
     addNewRestaurant(restaurant)
         .then((restaurant) => {
             res
