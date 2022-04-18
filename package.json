@@ -1,4 +1,22 @@
 {
+  "name": "project",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OlesiaMashko/ITE5315-Project.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OlesiaMashko/ITE5315-Project/issues"
+  },
+  "homepage": "https://github.com/OlesiaMashko/ITE5315-Project#readme",
+  "description": "",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
