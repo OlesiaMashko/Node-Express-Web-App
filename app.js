@@ -6,6 +6,10 @@ const path = require('path');
 const urlencodedParse = express.urlencoded({ extended: false })
 const { query } = require('express-validator');
 const { check, validationResult } = require('express-validator');
+require('dotenv').config()
+var jwt = require('jsonwebtoken');
+var bcrypt = require('bcryptjs');
+const cookieParser = require('cookie-parser')
 
 //Get database and model referencw
 var database = require('./config/database');
@@ -27,10 +31,12 @@ const HBS = exphbs.create({
 
 app.engine('.hbs', HBS.engine)
 app.set('view engine', '.hbs');
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ 'extended': 'true' })); // parse application/x-www-form-urlencoded
 app.use(bodyParser.json()); // parse application/json
 app.use(bodyParser.json({ type: 'application/vnd.api+json' })); // parse application/vnd.api+json as json
+
 
 //to testing addNewRestaurant
 var restaurant = new Restaurants({
@@ -97,9 +103,44 @@ function deleteRestaurantById(Id) {
 
 //displays the mess in console if connected to db
 initialize("Connected successfully");
+var userPassword = "OreoluwaOlesia"
+
+//authorization function to allow user to access certain route
+const authorization = (req, res, next) => {
+    const token = req.cookies.token;
+
+    if (!token) {
+      return res.sendStatus(403);
+    }
+    try {
+      const data = jwt.verify(token, process.env.ACCESS_TOKEN);   
+      return next();
+    } catch {
+      return res.sendStatus(403);
+    }
+  };
+//Login route to sign user in
+app.post("/login", function(req, res){
+    var password = req.body.password;
+  
+    const correct = bcrypt.compareSync(password,process.env.PASSWORD,);
+
+    if(correct == true){
+       const token = jwt.sign({password: process.env.PASSWORD}, process.env.ACCESS_TOKEN, {
+        expiresIn: 86400 }) // expires in 24 hours
+        return res
+        .cookie("token", token)
+        .status(200)
+        .json({user_auth : "User authenticated"})
+       }else{
+        res.status(500).send("Wrong password")
+       }
+       
+})
 
 //This route uses the body of the request to add a new "Restaurant"
-app.post("/api/restaurants", function (req, res) {
+//The route can only be access if user is authorized
+app.post("/api/restaurants", authorization, function (req, res) {
     if (!req.body) return res.status(400).render('./partials/error.hbs', { message: "400, Bad Request" })
     let address = {
         building: req.body.building,
@@ -126,7 +167,7 @@ app.post("/api/restaurants", function (req, res) {
         restaurant_id: restaurant_id
     });
 
-    addNewRestaurant(restaurant)
+    addNewRestaurant(newRestaurant)
         .then((restaurant) => {
             res
                 .status(201)
@@ -137,11 +178,12 @@ app.post("/api/restaurants", function (req, res) {
 
 //This route must accept the numeric query parameters "page" and "perPage" as well as the string parameter "borough"
 //Validation is done using express-validation
+//The route can only be access if user is authorized
 app.get("/api/restaurants", [
     check("page").notEmpty().withMessage("Page field should not be empty").isNumeric().withMessage("Page field must be a number"),
     check("perPage").notEmpty().withMessage("Per Page field should not be empty").isNumeric().withMessage("Per Page field must be a number"),
     check("borough").not().isNumeric().withMessage("Borough field must be a string"),
-], function (req, res) {
+], authorization, function (req, res) {
     let page = req.query.page;
     let perPage = req.query.perPage;
     let borough = {}
@@ -173,28 +215,32 @@ app.get("/api/restaurants", [
 
 
 //gets the restaurant by ID passed in the route
-app.get("/api/restaurants/:_id", function (req, res) {
-    var id = req.params._id
-    getRestaurantById(id)
-        .then((restaurant) => {
-            res
-                .status(201)
-                .json(restaurant);
-            process.exit()
-        })
-        .catch((err) => {
-            console.error(err.message);
-            res.status(500).render('./partials/error.hbs', { title: "Status 500", message: err.message })
-        });
+//user can access the route only if authorized
+app.get("/api/restaurants/:_id", authorization, function (req, res) {
+    var password = req.body.password;
+    console.log(req.cookies);
+        var id = req.params._id
+        getRestaurantById(id)
+            .then((restaurant) => {
+                res
+                    .status(201)
+                    .json(restaurant);
+                process.exit()
+            })
+            .catch((err) => {
+                console.error(err.message);
+                res.status(500).render('./partials/error.hbs', { title: "Status 500", message: err.message })
+            });
+   
 })
 
 //update restaurant details by id passed in the route and other data in the
 //request body
-app.put("/api/restaurants/:_id", function (req, res) {
+//user can access the route only if authorized
+app.put("/api/restaurants/:_id", authorization, function (req, res) {
     var borough = req.body.borough
     var street = req.body.street
-
-    updateRestaurantById(req.params._id, borough, street)
+        updateRestaurantById(req.params._id, borough, street)
         .then((restaurant) => {
             res.status(201)
                 .json(restaurant)
@@ -204,19 +250,25 @@ app.put("/api/restaurants/:_id", function (req, res) {
             console.error(err.message);
             res.status(500).render('./partials/error.hbs', { title: "Status 500", message: err.message })
         });
+ 
 })
 
 //deletes the restaurant by id
-app.delete("/api/restaurants/:_id", function (req, res) {
-    deleteRestaurantById(req.params)
+//user can access the route only if authorized
+app.delete("/api/restaurants/:_id", authorization, function (req, res) {
+    var password = req.body.password;
+  
+        deleteRestaurantById(req.params)
         .then((restaurant) => {
             console.log(" restaurant deleted");
             res.status(201).send("Restaurant deleted")
         })
         .catch((err) => { res.status(500).render('./partials/error.hbs', { title: "Status 500", message: err.message }) });
-})
+             
+   })
 
-app.get("/api/ui/restaurants", function (req, res) {
+//The route can only be access if user is authorized, it display the form in browser
+app.get("/api/ui/restaurants", authorization, function (req, res) {
     res.render('./pages/form', { title: 'GET RESTAURANT' });
 })
 
@@ -255,10 +307,17 @@ app.post("/api/ui/restaurants", [
 
 })
 
+ //logs user out 
+   app.get("/logout", authorization, (req, res) => {
+    return res
+      .clearCookie("token")
+      .status(200)
+      .json({ message: "Successfully logged out" });
+  });
 
-app.use('/', function (req, res) {
-    res.render('./partials/index', { title: 'Express' });
-});
+ app.use('/', function (req, res) {
+     res.render('./partials/index', { title: 'Express' });
+ });
 
 app.get('*', function (req, res) {
     res.render('./partials/error.hbs', { title: 'Error', message: 'Wrong Route' });
