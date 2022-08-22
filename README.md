@@ -3,9 +3,9 @@
 ## Description: Develop a secure db-driven Node/Express web app. 
 
 ### Project Specification: 
-**Step 1: Loading the [Sample Restaurant Data](https://github.com/OlesiaMashko/ITE5315-Project/blob/main/package-lock.json) JSON file in MongoDB Atlas. ** 
+** Step 1: Loading the [Sample Restaurant Data](https://github.com/OlesiaMashko/ITE5315-Project/blob/main/package-lock.json) JSON file in MongoDB Atlas. ** 
 
-**Step 2: Building a Web API **
+** Step 2: Building a Web API **
 1. You need to install express, cors, mongoose + set up Git repository 
 2. Add a module to interact with Restaurant MongoDB 
 o "Initializing" the Module before the server starts 
