@@ -3,13 +3,13 @@
 ## Description: Develop a secure db-driven Node/Express web app. 
 
 ### Project Specification: 
-**Step 1:** Loading the "Sample Restaurant Data" JSON file in MongoDB Atlas 
+**Step 1: Loading the [Sample Restaurant Data](https://github.com/OlesiaMashko/ITE5315-Project/blob/main/package-lock.json) JSON file in MongoDB Atlas. ** 
 
-**Step 2:** Building a Web API 
- You need to install express, cors, mongoose + set up Git repository 
- Add a module to interact with Restaurant MongoDB 
+**Step 2: Building a Web API **
+1. You need to install express, cors, mongoose + set up Git repository 
+2. Add a module to interact with Restaurant MongoDB 
 o "Initializing" the Module before the server starts 
- To ensure that we can indeed connect to the MongoDB Atlas cluster with our 
+3. To ensure that we can indeed connect to the MongoDB Atlas cluster with our 
 new connection string, we must invoke the db.initialize(“connection string…”) 
 method and only start the server once it has succeeded, otherwise we should 
 show the error message in the console 
@@ -34,42 +34,40 @@ o updateRestaurantById(data,Id): Overwrite an existing restaurant whose "_id" va
 matches the "Id" parameter, using the object passed in the "data" parameter. 
 o deleteRestaurantById(Id): Delete an existing restaurant whose "_id" value matches the 
 "Id" parameter 
- Add the routes : The next piece that needs to be completed before we have a functioning Web 
+4. Add the routes : The next piece that needs to be completed before we have a functioning Web 
 API is to actually define the routes (listed Below). Note: Do not forget to return an error 
 message if there was a problem and make use of the status codes 201, 204 and 500 where 
 applicable. 
- POST /api/restaurants 
+5. POST /api/restaurants 
 o This route uses the body of the request to add a new "Restaurant" document to the 
 collection and return the created object / fail message to the client. 
- GET /api/restaurants 
+6. GET /api/restaurants 
 o This route must accept the numeric query parameters "page" and "perPage" as well as 
 the string parameter "borough", ie: 
 /api/restaurants?page=1&perPage=5&borough=Bronx. It will use these values to return 
 all "Restaurant" objects for a specific "page" to the client as well as optionally filtering 
 by "borough", if provided. 
- EXTRA CHALLENGE: add query param validation to your route in order to make sure that the 
+7. EXTRA CHALLENGE: add query param validation to your route in order to make sure that the 
 params you expect are present, and of the type you expect. You can do this using packages like 
 https://www.npmjs.com/package/celebrate or https://express-validator.github.io/docs/checkapi.html. If the params are incorrect, your route should return a 400 response (client error) vs. 
 500 (server error). 
- GET /api/restaurants 
-
+8. GET /api/restaurants 
 o This route must accept a route parameter that represents the _id of the desired 
 restaurant object, ie: /api/restaurants/ 5eb3d668b31de5d588f4292e. It will use this 
 parameter to return a specific "Restaurant" object to the client. 
- PUT /api/restaurants 
+9. PUT /api/restaurants 
 o This route must accept a route parameter that represents the _id of the desired 
 restaurant object, ie: /api/restaurants/5eb3d668b31de5d588f4292e as well as read the 
 contents of the request body. It will use these values to update a specific "Restaurant" 
 document in the collection and return a success / fail message to the client. 
- DELETE /api/restaurants 
+10. DELETE /api/restaurants 
 o This route must accept a route parameter that
-
 represents the _id of the desired 
 restaurant object, ie: /api/restaurants/5eb3d668b31de5d588f4292e. It will use this 
 value to delete a specific "Restaurant" document from the collection and return a 
 success / fail message to the client. 
 
-Step 3: Add UI/Form 
+** Step 3: Add UI/Form **
 You want to demonstrate your skill in working with Template Engines and Form, but you don’t want to 
 apply this for the entire application. 
 Try to make a new route which works similar to “/api/restaurants?page=1&perPage=5&borough=Bronx” 
@@ -77,12 +75,12 @@ and take the ‘page’, ‘perPage’ and ‘borough’ through FORM and displa
 Engine! 
 Use your creativity to design the layout and apply proper css style/format. 
 
-Step 4 : Use Environment Variable for your Connection String 
+** Step 4 : Use Environment Variable for your Connection String **
 Your solution currently has your database connection string (with username and password!) hard coded 
 into your source code. This is a potential security risk. If this code is shared between users on a team, 
 or if it is pushed to a public repo on GitHub, your password is now public too. 
 
-Step 5 : Add security feature to the app: 
+** Step 5 : Add security feature to the app: **
 The app giving use the access to restaurant data. How do you limit the user-access, so that only 
 authorized users can open the app or access to specific route? 
 This is an open concept questions in which you can use the security features like Password Encryption, 
