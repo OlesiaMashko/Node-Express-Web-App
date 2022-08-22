@@ -1,11 +1,11 @@
 # Node/Express WEB Application 
 
-## Description: Develop a secure db-driven Node/Express web app. 
+## Description: Developed a Secure db-driven Node/Express Web App. 
 
 ### Project Specification: 
 **Step 1: Loading the [Sample Restaurant Data](https://github.com/OlesiaMashko/ITE5315-Project/blob/main/package-lock.json) JSON file in MongoDB Atlas.** 
 
-**Step 2: Building a Web API**
+**Step 2: Building a Web API:**
 1. You need to install express, cors, mongoose + set up Git repository 
 2. Add a module to interact with Restaurant MongoDB 
 o "Initializing" the Module before the server starts 
@@ -66,7 +66,7 @@ restaurant object, ie: /api/restaurants/5eb3d668b31de5d588f4292e. It will use th
 value to delete a specific "Restaurant" document from the collection and return a 
 success / fail message to the client. 
 
-**Step 3: Add UI/Form**
+**Step 3: Add UI/Form:**
 You want to demonstrate your skill in working with Template Engines and Form, but you don’t want to 
 apply this for the entire application. 
 Try to make a new route which works similar to “/api/restaurants?page=1&perPage=5&borough=Bronx” 
@@ -74,7 +74,7 @@ and take the ‘page’, ‘perPage’ and ‘borough’ through FORM and displa
 Engine! 
 Use your creativity to design the layout and apply proper css style/format. 
 
-**Step 4 : Use Environment Variable for your Connection String**
+**Step 4 : Use Environment Variable for your Connection String:**
 Your solution currently has your database connection string (with username and password!) hard coded 
 into your source code. This is a potential security risk. If this code is shared between users on a team, 
 or if it is pushed to a public repo on GitHub, your password is now public too. 
